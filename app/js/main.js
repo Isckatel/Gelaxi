@@ -10,8 +10,11 @@ class Unit {
   constructor(srsImg, x = -16, y = -16) {
     this.img = new Image();
     this.img.src = srsImg;
+    this.width = this.img.width;
+    this.height = this.img.height;
     this.x = x;
     this.y = y;
+
   }
   draw() {
     ctx.drawImage(this.img, this.x, this.y);
@@ -82,16 +85,19 @@ function draw() {
   ctx.fillRect(0, 0, 320, 240); // Заливка
 
   movBug();
-   if (bullShot) {bulPlay.y-=speedBull;}
-  // if (bulPlay.y>=-8) {
-  //   bulPlay.y=-16;
-  //   bulPlay.x=-16;
-  //   bullShot=false;
-  // }
+  movBullet();
+  //--------------Чет колизия не работает.
+  //--------------Надо наследников сделать пуль и жуков от юнит
+  if (collision(bulPlay,buggreen)) {
+      bulPlay.y=-16;
+      bulPlay.x=-16;
+      bullShot=false;
+    }
 
-  player.draw();
-  buggreen.draw();
   bulPlay.draw();
+  buggreen.draw();
+  player.draw();
+
   requestAnimationFrame(draw); // Вызов функции постоянно для перерасчета перед обновлением кадра
 }
 
@@ -106,3 +112,24 @@ function movBug() {
   if (buggreen.x>302) {trendBug =2;}
   else if (buggreen.x<2) {trendBug =1;}
 }
+
+function movBullet() {
+  if (bullShot) {bulPlay.y-=speedBull;}
+  if (bulPlay.y<=-8) {
+    bulPlay.y=-16;
+    bulPlay.x=-16;
+    bullShot=false;
+  }
+}
+
+function collision(objA, objB) {
+    if (objA.x+objA.width  > objB.x &&
+        objA.x             < objB.x+objB.width &&
+        objA.y+objA.height > objB.y &&
+        objA.y             < objB.y+objB.height) {
+            return true;
+        }
+        else {
+            return false;
+            }
+    }
