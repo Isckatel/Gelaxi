@@ -18,7 +18,6 @@ class Unit {
   draw() {
     ctx.drawImage(this.img, this.x, this.y);
   }
-  static getX() {return this.x}
 }
 
 class Bug extends Unit {
@@ -28,7 +27,10 @@ class Bug extends Unit {
   bufX = this.x; //для расчета медленного передвижения
 }
 
-let buggreen = new Bug("img/buggreen.png",142,16);
+class Bullet extends Unit {
+  speedBull = 3;
+}
+
 let buggreens = [];
 const gapbug = 5;
 for (let i=0; i<10; i++) {
@@ -36,22 +38,26 @@ for (let i=0; i<10; i++) {
   else buggreens[i] = new Bug("img/buggreen.png", buggreens[i-1].x+16+gapbug, 37);
 }
 
+let buggreens2 = [];
+for (let i=0; i<10; i++) {
+  if (i==0) buggreens2[i] = new Bug("img/buggreen.png",50,52);
+  else buggreens2[i] = new Bug("img/buggreen.png", buggreens2[i-1].x+16+gapbug, 52);
+}
+console.log(buggreens);
+console.log(buggreens2);
 let player = new Unit("img/player.png",142,220);
 let bulPlay = new Unit("img/bullet.png",-16, -16, 8, 8);
 
 const speedPlayer = 7;
 const speedBull = 2;
-
-let endGame = false;
 let bullShot = false;
-let trendBug = 1; //1-направелние вправо 0-направелине движения влево
-let bufPosX = buggreen.x;
+
+let countDed = 0;
+let endGame = false;
 
 //Загрузилась ли последния картинка?
 //Вызываем основную функцию
-player.img.onload= draw;
-//draw();
-
+player.img.onload= draw; //draw();
 
 document.addEventListener("keydown",(e)=>{
   let code = e.code;
@@ -93,40 +99,30 @@ document.addEventListener("keydown",(e)=>{
   }
 })
 
+//Измениения  в игре
+function update() {
+  movBugs(buggreens);
+  movBugs(buggreens2);
+  movBullet();
+
+  collisionEnemy(buggreens);//Попадание во врога
+  collisionEnemy(buggreens2);//Попадание во врога
+  countDeds();//Подсчет мертвых жуков
+}
 
 //Основная функция
 function draw() {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, 320, 240); // Заливка
 
-  movBug();
-  movBugs();
-  movBullet();
-
-//Попадание во врога
-  if (collision(bulPlay,buggreen)) {
-      bulPlay.y = -16;
-      bulPlay.x = -16;
-      bullShot = false;
-      buggreen.y = 260;
-    }
-  let countDed=0;
-  for(let i=0;i<buggreens.length;i++){
-    if (collision(bulPlay,buggreens[i])) {
-        bulPlay.y = -16;
-        bulPlay.x = -16;
-        bullShot = false;
-        buggreens[i].y = 260;
-        buggreens[i].dead = true;
-      }
-    if (buggreens[i].dead) countDed+=1;
-  }
-  if (countDed==buggreens.length) endGame = true;
+  update();
 
   bulPlay.draw();
-  buggreen.draw();
   for(let i=0;i<buggreens.length;i++){
     buggreens[i].draw();
+  }
+  for(let i=0;i<buggreens2.length;i++){
+    buggreens2[i].draw();
   }
   player.draw();
 
@@ -142,19 +138,7 @@ function draw() {
 //-------------
 //---ФУНКЦИИ---
 //-------------
-function movBug() {
-  if (trendBug==1) {
-    bufPosX = bufPosX + buggreen.speedBug;
-    buggreen.x = Math.round(bufPosX);
-  } else {
-    bufPosX = bufPosX - buggreen.speedBug;
-    buggreen.x = Math.round(bufPosX);
-  }
-  if (buggreen.x>302) {trendBug =2;}
-  else if (buggreen.x<2) {trendBug =1;}
-}
-
-function movBugs() {
+function movBugs(buggreens) {
   for(let i=0;i<buggreens.length;i++){
     //Плавное движение из стороны в сторону
     if (buggreens[i].trendBug==1) {
@@ -188,4 +172,26 @@ function collision(objA, objB) {
       objA.y             < objB.y+objB.height) {
           return true;
   } else {return false;}
+}
+
+//Попадание во врога
+function collisionEnemy(buggreens) {
+  for(let i=0;i<buggreens.length;i++){
+    if (collision(bulPlay,buggreens[i]) ) {
+        bulPlay.y = -16;
+        bulPlay.x = -16;
+        bullShot = false;
+        buggreens[i].y = 260;
+        buggreens[i].dead = true;
+      }
+  }
+}
+//Подсчет мертвых жуков
+function countDeds() {
+  countDed = 0;
+  for(let i=0;i<buggreens.length;i++) {
+    if (buggreens[i].dead) countDed+=1;
+    if (buggreens2[i].dead) countDed+=1;
+  }
+  if (countDed == (buggreens.length+buggreens2.length)) endGame = true;
 }
