@@ -40,20 +40,17 @@ let player = new Unit("img/player.png",142,220);
 let bulPlay = new Unit("img/bullet.png",-16, -16, 8, 8);
 
 const speedPlayer = 7;
-
 const speedBull = 2;
 
+let endGame = false;
 let bullShot = false;
 let trendBug = 1; //1-направелние вправо 0-направелине движения влево
 let bufPosX = buggreen.x;
-// //Трубы
-// let pipes = [{x:cvs.width, y:0}];
-//
+
 //Загрузилась ли последния картинка?
 //Вызываем основную функцию
 player.img.onload= draw;
 //draw();
-
 
 
 document.addEventListener("keydown",(e)=>{
@@ -105,14 +102,26 @@ function draw() {
   movBug();
   movBugs();
   movBullet();
-  //--------------Чет колизия не работает.
-  //--------------Надо наследников сделать пуль и жуков от юнит
+
+//Попадание во врога
   if (collision(bulPlay,buggreen)) {
       bulPlay.y = -16;
       bulPlay.x = -16;
       bullShot = false;
       buggreen.y = 260;
     }
+  let countDed=0;
+  for(let i=0;i<buggreens.length;i++){
+    if (collision(bulPlay,buggreens[i])) {
+        bulPlay.y = -16;
+        bulPlay.x = -16;
+        bullShot = false;
+        buggreens[i].y = 260;
+        buggreens[i].dead = true;
+      }
+    if (buggreens[i].dead) countDed+=1;
+  }
+  if (countDed==buggreens.length) endGame = true;
 
   bulPlay.draw();
   buggreen.draw();
@@ -121,7 +130,14 @@ function draw() {
   }
   player.draw();
 
-  requestAnimationFrame(draw); // Вызов функции постоянно для перерасчета перед обновлением кадра
+  if (endGame) {
+    ctx.fillStyle = "#fff";
+    ctx.font = "32px Verdana";
+    ctx.fillText("Конец", 110, 110);
+    removeEventListener("keydown");
+  }
+
+  if (!endGame) requestAnimationFrame(draw); // Вызов функции постоянно для перерасчета перед обновлением кадра
 }
 //-------------
 //---ФУНКЦИИ---
