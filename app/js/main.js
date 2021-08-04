@@ -7,11 +7,11 @@ if (cvs.getContext){
 }
 
 class Unit {
-  constructor(srsImg, x = -16, y = -16) {
+  constructor(srsImg, x = -16, y = -16, width = 16, height=16) {
     this.img = new Image();
     this.img.src = srsImg;
-    this.width = this.img.width;
-    this.height = this.img.height;
+    this.width = width;
+    this.height = width;
     this.x = x;
     this.y = y;
 
@@ -19,12 +19,15 @@ class Unit {
   draw() {
     ctx.drawImage(this.img, this.x, this.y);
   }
+}
 
+class Bug extends Unit {
+  dead = false;
 }
 
 let buggreen = new Unit("img/buggreen.png",142,16);
 let player = new Unit("img/player.png",142,220);
-let bulPlay = new Unit("img/bullet.png");
+let bulPlay = new Unit("img/bullet.png",-16, -16, 8, 8);
 
 const speedPlayer = 7;
 const speedBug = 0.3;
@@ -69,11 +72,19 @@ document.addEventListener("keydown",(e)=>{
       }
       break;
     case "ArrowUp":
-
+      if (bulPlay.x == -16  && !bullShot) {
+        bulPlay.x=player.x+4;
+        bulPlay.y = player.y-8;
+        bullShot=true;
+      }
       break;
 
     case "Space":
-
+      if (bulPlay.x == -16  && !bullShot) {
+        bulPlay.x=player.x+4;
+        bulPlay.y = player.y-8;
+        bullShot=true;
+      }
       break;
   }
 })
@@ -89,9 +100,10 @@ function draw() {
   //--------------Чет колизия не работает.
   //--------------Надо наследников сделать пуль и жуков от юнит
   if (collision(bulPlay,buggreen)) {
-      bulPlay.y=-16;
-      bulPlay.x=-16;
-      bullShot=false;
+      bulPlay.y = -16;
+      bulPlay.x = -16;
+      bullShot = false;
+      buggreen.y = 260;
     }
 
   bulPlay.draw();
@@ -100,7 +112,9 @@ function draw() {
 
   requestAnimationFrame(draw); // Вызов функции постоянно для перерасчета перед обновлением кадра
 }
-
+//-------------
+//---ФУНКЦИИ---
+//-------------
 function movBug() {
   if (trendBug==1) {
     bufPosX = bufPosX + speedBug;
@@ -123,13 +137,10 @@ function movBullet() {
 }
 
 function collision(objA, objB) {
-    if (objA.x+objA.width  > objB.x &&
-        objA.x             < objB.x+objB.width &&
-        objA.y+objA.height > objB.y &&
-        objA.y             < objB.y+objB.height) {
-            return true;
-        }
-        else {
-            return false;
-            }
-    }
+  if (objA.x+objA.width  > objB.x &&
+      objA.x             < objB.x+objB.width &&
+      objA.y+objA.height > objB.y &&
+      objA.y             < objB.y+objB.height) {
+          return true;
+  } else {return false;}
+}
