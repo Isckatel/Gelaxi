@@ -14,23 +14,33 @@ class Unit {
     this.height = width;
     this.x = x;
     this.y = y;
-
   }
   draw() {
     ctx.drawImage(this.img, this.x, this.y);
   }
+  static getX() {return this.x}
 }
 
 class Bug extends Unit {
+  speedBug = 0.3;
+  trendBug = 1; //1-направелние вправо 0-направелине движения влево
   dead = false;
+  bufX = this.x; //для расчета медленного передвижения
 }
 
-let buggreen = new Unit("img/buggreen.png",142,16);
+let buggreen = new Bug("img/buggreen.png",142,16);
+let buggreens = [];
+const gapbug = 5;
+for (let i=0; i<10; i++) {
+  if (i==0) buggreens[i] = new Bug("img/buggreen.png",50,37);
+  else buggreens[i] = new Bug("img/buggreen.png", buggreens[i-1].x+16+gapbug, 37);
+}
+
 let player = new Unit("img/player.png",142,220);
 let bulPlay = new Unit("img/bullet.png",-16, -16, 8, 8);
 
 const speedPlayer = 7;
-const speedBug = 0.3;
+
 const speedBull = 2;
 
 let bullShot = false;
@@ -56,14 +66,12 @@ document.addEventListener("keydown",(e)=>{
     case "ArrowRight":
       if (player.x<302) player.x += speedPlayer; ;
       break;
-
     case "KeyA":
       if (player.x>2) player.x -= speedPlayer;
       break;
     case "ArrowLeft":
       if (player.x>2) player.x -= speedPlayer;
       break;
-
     case "KeyW":
       if (bulPlay.x == -16  && !bullShot) {
         bulPlay.x=player.x+4;
@@ -78,7 +86,6 @@ document.addEventListener("keydown",(e)=>{
         bullShot=true;
       }
       break;
-
     case "Space":
       if (bulPlay.x == -16  && !bullShot) {
         bulPlay.x=player.x+4;
@@ -96,6 +103,7 @@ function draw() {
   ctx.fillRect(0, 0, 320, 240); // Заливка
 
   movBug();
+  movBugs();
   movBullet();
   //--------------Чет колизия не работает.
   //--------------Надо наследников сделать пуль и жуков от юнит
@@ -108,6 +116,9 @@ function draw() {
 
   bulPlay.draw();
   buggreen.draw();
+  for(let i=0;i<buggreens.length;i++){
+    buggreens[i].draw();
+  }
   player.draw();
 
   requestAnimationFrame(draw); // Вызов функции постоянно для перерасчета перед обновлением кадра
@@ -117,14 +128,32 @@ function draw() {
 //-------------
 function movBug() {
   if (trendBug==1) {
-    bufPosX = bufPosX + speedBug;
+    bufPosX = bufPosX + buggreen.speedBug;
     buggreen.x = Math.round(bufPosX);
   } else {
-    bufPosX = bufPosX - speedBug;
+    bufPosX = bufPosX - buggreen.speedBug;
     buggreen.x = Math.round(bufPosX);
   }
   if (buggreen.x>302) {trendBug =2;}
   else if (buggreen.x<2) {trendBug =1;}
+}
+
+function movBugs() {
+  for(let i=0;i<buggreens.length;i++){
+    //Плавное движение из стороны в сторону
+    if (buggreens[i].trendBug==1) {
+      buggreens[i].bufX = buggreens[i].bufX + buggreens[i].speedBug;
+      buggreens[i].x = Math.round(buggreens[i].bufX);
+    } else {
+      buggreens[i].bufX = buggreens[i].bufX - buggreens[i].speedBug;
+      buggreens[i].x = Math.round(buggreens[i].bufX);
+    }
+    //границы движения жука и смена направления
+    let borderRight = 302-((buggreens.length - i) * (16 + gapbug));
+    let borderLeft = 2 + (i * (16 + gapbug));
+    if (buggreens[i].x>borderRight) {buggreens[i].trendBug =2;}
+    else if (buggreens[i].x<borderLeft) {buggreens[i].trendBug =1;}
+  }
 }
 
 function movBullet() {
