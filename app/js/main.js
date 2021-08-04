@@ -28,7 +28,7 @@ class Bug extends Unit {
 }
 
 class Bullet extends Unit {
-  speedBull = 3;
+  speed = 3;
 }
 
 let buggreens = [];
@@ -43,10 +43,10 @@ for (let i=0; i<10; i++) {
   if (i==0) buggreens2[i] = new Bug("img/buggreen.png",50,52);
   else buggreens2[i] = new Bug("img/buggreen.png", buggreens2[i-1].x+16+gapbug, 52);
 }
-console.log(buggreens);
-console.log(buggreens2);
+
 let player = new Unit("img/player.png",142,220);
 let bulPlay = new Unit("img/bullet.png",-16, -16, 8, 8);
+let bullets = [];
 
 const speedPlayer = 7;
 const speedBull = 2;
@@ -54,10 +54,16 @@ let bullShot = false;
 
 let countDed = 0;
 let endGame = false;
+let timer = 0;
+let flagAttack = false;
 
 //Загрузилась ли последния картинка?
 //Вызываем основную функцию
 player.img.onload= draw; //draw();
+
+if (timer>9007199254740990) timer=0;
+setInterval(()=>{timer++;},1000);
+
 
 document.addEventListener("keydown",(e)=>{
   let code = e.code;
@@ -104,10 +110,23 @@ function update() {
   movBugs(buggreens);
   movBugs(buggreens2);
   movBullet();
-
   collisionEnemy(buggreens);//Попадание во врога
   collisionEnemy(buggreens2);//Попадание во врога
   countDeds();//Подсчет мертвых жуков
+  if (countLive(buggreens2)>0 && timer % 3 == 0 && !flagAttack) {
+    attackBug = [];
+    for(let i=0;i<buggreens2.length;i++){
+      if (!buggreens2[i].dead) attackBug.push(buggreens2[i]);
+    }
+    let el= Math.floor(Math.random() * attackBug.length);
+    flagAttack = true;
+    bullets.push(new Bullet("img/bulletBug.png",buggreens2[el].x + buggreens2[el].height/2, buggreens2[el].y + buggreens2[el].height, 8, 8));
+    console.log(el);
+    console.log(bullets[0]);
+  } else if (countLive(buggreens2)>0 &&  flagAttack) {
+    // flagAttack =false;
+  }
+  if (bullets) movBulletBugs(bullets);
 }
 
 //Основная функция
@@ -118,12 +137,17 @@ function draw() {
   update();
 
   bulPlay.draw();
+
   for(let i=0;i<buggreens.length;i++){
     buggreens[i].draw();
   }
   for(let i=0;i<buggreens2.length;i++){
     buggreens2[i].draw();
   }
+  for(let i=0;i<bullets.length;i++){
+    bullets[i].draw();
+  }
+
   player.draw();
 
   if (endGame) {
@@ -155,13 +179,23 @@ function movBugs(buggreens) {
     else if (buggreens[i].x<borderLeft) {buggreens[i].trendBug =1;}
   }
 }
-
+//Движение пули игрока
 function movBullet() {
   if (bullShot) {bulPlay.y-=speedBull;}
   if (bulPlay.y<=-8) {
     bulPlay.y=-16;
     bulPlay.x=-16;
     bullShot=false;
+  }
+}
+//Движение вражеской пули
+function movBulletBugs(bullets) {
+  for(let i=0;i<bullets.length;i++){
+    bullets[i].y += bullets[i].speed;
+    if (bullets[i].y>=240) {
+      bullets.splice(i,1);
+      flagAttack = false;
+    }
   }
 }
 
@@ -185,6 +219,14 @@ function collisionEnemy(buggreens) {
         buggreens[i].dead = true;
       }
   }
+}
+//Количество живых жуков
+function countLive(buggreens){
+  let count=0;
+  for(let i=0;i<buggreens.length;i++) {
+    if (!buggreens[i].dead) count+=1;
+  }
+  return count;
 }
 //Подсчет мертвых жуков
 function countDeds() {
