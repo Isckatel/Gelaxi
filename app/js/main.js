@@ -31,8 +31,48 @@ class Bullet extends Unit {
   speed = 2;
 }
 
+class  EnemyLine {
+  constructor(count, srsImg, x1, y1) {
+    this.gap = 5; //расстояние между жуками
+    this.srcImg = srsImg;//Спрайт
+    this.x1 = x1; //координаты первого врага в линии
+    this.y1 = y1;
+    this.count = count;
+    this.bug = [];
+    for (let i=0; i<this.count; i++) {
+      if (i==0) this.bug[i] = new Bug(this.srcImg, this.x1, this.y1);
+      else this.bug[i] = new Bug(this.srcImg, this.bug[i-1].x+16+this.gap, this.y1);
+    }
+  }
+  draw() {
+    for(let i = 0; i < this.bug.length; i++){
+      this.bug[i].draw();
+    }
+  }
+  mov() {
+    for(let i=0;i<this.bug.length;i++){
+      //Плавное движение из стороны в сторону
+      if (this.bug[i].trendBug==1) {
+        this.bug[i].bufX = this.bug[i].bufX + this.bug[i].speedBug;
+        this.bug[i].x = Math.round(this.bug[i].bufX);
+      } else {
+        this.bug[i].bufX = this.bug[i].bufX - this.bug[i].speedBug;
+        this.bug[i].x = Math.round(this.bug[i].bufX);
+      }
+      //границы движения жука и смена направления
+      let borderRight = 302-((this.bug.length - i) * (16 + this.gap));
+      let borderLeft = 2 + (i * (16 + this.gap));
+      if (this.bug[i].x>borderRight) {this.bug[i].trendBug =2;}
+      else if (this.bug[i].x<borderLeft) {this.bug[i].trendBug =1;}
+    }
+  }
+};
+bugline1 = new EnemyLine(10, "img/buggreen.png", 50, 67);
+console.log(bugline1);
+
 let buggreens = [];
 const gapbug = 5;
+
 for (let i=0; i<10; i++) {
   if (i==0) buggreens[i] = new Bug("img/buggreen.png",50,37);
   else buggreens[i] = new Bug("img/buggreen.png", buggreens[i-1].x+16+gapbug, 37);
@@ -108,6 +148,7 @@ document.addEventListener("keydown",(e)=>{
 function update() {
   movBugs(buggreens);
   movBugs(buggreens2);
+  bugline1.mov();
   movBullet();
   collisionEnemy(buggreens);//Попадание во врога
   collisionEnemy(buggreens2);//Попадание во врога
@@ -132,6 +173,9 @@ function draw() {
   for(let i=0;i<buggreens2.length;i++){
     buggreens2[i].draw();
   }
+
+  bugline1.draw();
+
   for(let i=0;i<bullets.length;i++){
     bullets[i].draw();
   }
